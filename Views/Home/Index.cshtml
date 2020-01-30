@@ -1,0 +1,159 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section scripts
+{
+    <script>
+        const model = {
+            people: ko.observableArray(),
+            editor: {
+                id: ko.observable(),
+                name: ko.observable(),
+                age: ko.observable(),
+                married: ko.observable(true),
+            },
+            displaySummary: ko.observable(true),
+            editorText: ko.observable("Create")
+        }
+
+        const sendAjaxRequest = (methodName, callback, param, reqData) => {
+            $.ajax({
+                url: '/api/people' + (param ? '/' + param : ''),
+                method: methodName,
+                success: callback,
+                data: reqData
+            })
+        }
+
+        const getAllData = _ => {
+            sendAjaxRequest('get', data => {
+                model.people.removeAll()
+                data.map(elem => {
+                    model.people.push(elem)
+                })
+            })
+        }
+
+        const deletePerson = item => {
+            sendAjaxRequest('delete', _ => {
+                getAllData()
+            }, item.Id)
+        }
+
+        const editorClick = _ => {
+            model.displaySummary(false)
+        }
+
+        const saveHandler = item => {
+            if (model.editor.id()) {
+                sendAjaxRequest('put', _ => {
+                    resetModel();
+                    getAllData()
+                }, null, { Id: model.editor.id, Name: model.editor.name, Age: model.editor.age, Married: model.editor.married })
+
+            } else {
+                sendAjaxRequest('post', data => {
+                    model.people.push(data)
+                    model.displaySummary(true)
+                },
+                null, { Name: model.editor.name, Age: model.editor.age, Married: model.editor.married })
+                resetModel();
+            }
+        }
+
+        const resetModel = _ => {
+            model.editorText("Добавление");
+            model.displaySummary(true);
+
+            model.editor.id(0);
+            model.editor.name("");
+            model.editor.married(false);
+            model.editor.age("");
+        }
+
+        const editPerson = item => {
+            model.editorText("Редактирование");
+            model.displaySummary(false);
+
+            model.editor.id(item.Id);
+            model.editor.name(item.Name);
+            model.editor.married(item.Married);
+            model.editor.age(item.Age);
+        }
+
+     
+        $(function () {
+            getAllData()
+            ko.applyBindings()
+        });
+    </script>
+}
+
+<style>
+    td, th {
+        text-align: center;
+    }
+</style>
+
+
+<div class="container">
+    <div class="card" data-bind="if: model.displaySummary">
+        <div class="card-header">
+            Список сорудников
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>ФИО</th>
+                        <th>Возраст</th>
+                        <th>Семейное положение</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: model.people">
+                    <tr>
+                        <td data-bind="text: Id"></td>
+                        <td data-bind="text: Name"></td>
+                        <td data-bind="text: Age"></td>
+                        <td>
+                            <input disabled type="checkbox" data-bind="checked: Married" value="" />
+                        </td>
+                        <td><button class="btn btn-primary btn-sm" data-bind="click: editPerson">Edit</button>
+                        <button class="btn btn-danger btn-sm" data-bind="click: deletePerson">Delete</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button data-bind="click: editorClick" class="btn btn-lg btn-primary">Создать</button>
+        </div>
+    </div>
+    <div class="card" data-bind="ifnot: model.displaySummary">
+        <div class="card-header">
+            <p data-bind="text: model.editorText"></p>
+        </div>
+        <div class="card-body">
+                <input id="id" type="hidden" data-bind="value: model.editor.id" />
+                <div class="form-group">
+                    <label>ФИО:</label>
+                    <input id="name" type="text"class="form-control" data-bind="value: model.editor.name" />
+                </div>
+                <div class="form-group">
+                    <label>Возраст:</label>
+                    <input id="age" type="number" class="form-control" data-bind="value: model.editor.age" />
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                        <input  id="married" type="checkbox" class="form-check-input" data-bind="checked: model.editor.married" />
+                        <label class="form-check-label">
+                            Статус
+                        </label>
+                    </div>
+                </div>
+                <button id="savebtn" type="submit" data-bind="click: saveHandler" class="btn btn-primary">Сохранить</button>
+        </div>
+
+    </div>
+</div>

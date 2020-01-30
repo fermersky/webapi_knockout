@@ -1,0 +1,39 @@
+﻿@using WebApplication14.Models;
+@model IEnumerable<Person>
+
+<div class="card-header">
+    Список сорудников
+</div>
+<div class="card-body">
+    <table class="table table-striped table-sm" >
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>ФИО</th>
+                <th>Возраст</th>
+                <th>Семейное положение</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Person person in Model)
+            {
+            <tr>
+                <td>
+                    @person.Id
+                </td>
+                <td>
+                    @person.Name
+                </td>
+                <td>
+                    @person.Age
+                </td>
+                <td>
+                   @(person.Married ? "Да" : "Нет")
+                </td>
+                <td>@Html.ActionLink("Удалить", "Delete", new { id= person.Id}, new {@class = "btn btn-primary btn-sm" })</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
